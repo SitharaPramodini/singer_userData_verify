@@ -105,7 +105,8 @@ function Home() {
             emp_name,
             nic,
             emp_mobile: phoneNumber,
-            address
+            address,
+            status: 'acknowledged'
         };
     
         try {
