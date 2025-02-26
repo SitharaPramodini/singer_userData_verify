@@ -22,7 +22,8 @@ function Home() {
     // const [otpMessage, setOtpMessage] = useState("");
     const [emp_name, setName] = useState("");
     const [nic, setNic] = useState("");
-    const [address, setAddress] = useState('');
+    const [address, setAddress] = useState("");
+    
     const [sendingOtp, setSendingOtp] = useState(false); // State to track OTP sending status
 
     const [enteredOtp, setEnteredOtp] = useState(""); // To store user input
@@ -71,18 +72,18 @@ function Home() {
     
             // Fetch user details from backend
             try {
-                const response = await fetch(`https://demo.secretary.lk/singer_finance/get_customer.php?emp_mobile=${phoneNumber}`);
+                const response = await fetch(`https://demo.secretary.lk/singer_finance/customer.php?emp_mobile=${phoneNumber}`);
                 
                 if (!response.ok) {
                     throw new Error('Failed to fetch user details');
                 }
     
                 const userDetails = await response.json();
-    
+    console.log(userDetails)
                 // Populate form fields
-                setName(userDetails.emp_name || '');
-                setNic(userDetails.nic || '');
-                setAddress(userDetails.address || '');
+                setName(userDetails[0].emp_name || '');
+                setNic(userDetails[0].nic || '');
+                setAddress(userDetails[0].address || '');
     
                 // toast.success("User details fetched successfully!");
             } catch (error) {
@@ -108,7 +109,7 @@ function Home() {
         };
     
         try {
-            const response = await fetch("http://localhost:3000/api/data/update", {
+            const response = await fetch(`https://demo.secretary.lk/singer_finance/customer.php?emp_mobile=${phoneNumber}`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
