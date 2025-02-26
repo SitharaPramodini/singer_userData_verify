@@ -12,43 +12,20 @@ import { useNavigate } from "react-router-dom";
 function Home() {
     const navigate = useNavigate(); // Initialize navigation
     const [termsModalOpen, setTermsModalOpen] = useState(false); // State for managing the modal
-    const webcamRef = useRef(null);
-    const [capturedImage, setCapturedImage] = useState(null);
-    const [showCamera, setShowCamera] = useState(false);
+    // const [capturedImage, setCapturedImage] = useState(null);
+    // const [showCamera, setShowCamera] = useState(false);
     const [showOtpInput, setShowOtpInput] = useState(false);
     const [otp, setOtp] = useState("");
     const [otpSent, setOtpSent] = useState(false);
     const [otpCorrect, setOtpCorrect] = useState(false);
     const [phoneNumber, setPhoneNumber] = useState("");
-    const [otpMessage, setOtpMessage] = useState("");
-    const [name, setName] = useState("");
+    // const [otpMessage, setOtpMessage] = useState("");
+    const [emp_name, setName] = useState("");
     const [nic, setNic] = useState("");
     const [address, setAddress] = useState('');
     const [sendingOtp, setSendingOtp] = useState(false); // State to track OTP sending status
 
     const [enteredOtp, setEnteredOtp] = useState(""); // To store user input
-
-    const capturePhoto = () => {
-        if (webcamRef.current) {
-            const imageSrc = webcamRef.current.getScreenshot();
-            if (imageSrc) {
-                const byteString = atob(imageSrc.split(',')[1]);
-                const arrayBuffer = new ArrayBuffer(byteString.length);
-                const uint8Array = new Uint8Array(arrayBuffer);
-
-                for (let i = 0; i < byteString.length; i++) {
-                    uint8Array[i] = byteString.charCodeAt(i);
-                }
-
-                const blob = new Blob([uint8Array], { type: "image/jpeg" });
-                const file = new File([blob], "captured-image.jpg", { type: "image/jpeg" });
-
-                setCapturedImage(imageSrc);
-                setImageFile(file); // Set the file as the image to be uploaded
-                setShowCamera(false);
-            }
-        }
-    };
 
     const generateOtp = () => Math.floor(100000 + Math.random() * 900000);
 
@@ -94,7 +71,7 @@ function Home() {
     
             // Fetch user details from backend
             try {
-                const response = await fetch(`http://localhost:3000/api/user-details/${phoneNumber}`);
+                const response = await fetch(`https://demo.secretary.lk/singer_finance/get_customer.php?emp_mobile=${phoneNumber}`);
                 
                 if (!response.ok) {
                     throw new Error('Failed to fetch user details');
@@ -122,32 +99,37 @@ function Home() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
-        const formData = new FormData();
-        formData.append("name", name);
-        formData.append("nic", nic);
-        formData.append("phn_no", phoneNumber);
-
+    
+        const requestData = {
+            emp_name,
+            nic,
+            emp_mobile: phoneNumber,
+            address
+        };
+    
         try {
-            const response = await fetch("https://demo.secretary.lk/fr_apis/face_registration.php", {
-                method: "POST",
-                body: formData,
+            const response = await fetch("http://localhost:3000/api/data/update", {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(requestData),
             });
-
+    
             const result = await response.json();
-
-            if (result.success) {
-                toast.success("Registration successful");
+    
+            if (response.ok) {
+                toast.success("Update successful");
                 navigate("/success");
-            } else if (result.error) {
-                toast.error("NIC already registered!");
-                console.error("Error:", result.error, result.message || "");
+            } else {
+                toast.error(result.message || "Update failed.");
             }
         } catch (error) {
-            console.error("Error during form submission:", error);
+            console.error("Error during update:", error);
             toast.error("An unexpected error occurred. Please try again.");
         }
     };
+    
 
 
     // const [termsModalOpen, setTermsModalOpen] = useState(false);
@@ -248,7 +230,7 @@ function Home() {
                                     <input
                                         type="text"
                                         name="name"
-                                        value={name}
+                                        value={emp_name}
                                         onChange={(e) => setName(e.target.value)}
                                         required
                                         className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:border-gray-300 dark:focus:border-red-500 focus:outline-none focus:ring-0 focus:border-red-600 peer"
