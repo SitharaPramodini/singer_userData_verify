@@ -44,10 +44,10 @@ const Success = () => {
           className="text-center"
         >
           <h1 className="mb-4 text-2xl mt-8 font-extrabold leading-none tracking-tight text-green-500 md:text-5xl lg:text-6xl">
-            We have<br></br> received your data!
+            You have<br></br> acknowledged your <br></br> data!
           </h1>
           <p className="my-8 text-sm font-light px-6 text-gray-500 lg:text-xl sm:px-16 xl:px-48 dark:text-gray-400 text-center">
-            Thank you for choosing Singer Finance. We will process your details and contact you shortly.
+            Thank you for choosing Singer Finance. We will process your details.
           </p>
           <p className="text-gray-300 text-sm text-center">Now you can close the tab</p>
         </motion.div>

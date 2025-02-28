@@ -8,6 +8,7 @@ import { RiVerifiedBadgeFill } from "react-icons/ri";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useNavigate } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 
 function Home() {
     const navigate = useNavigate(); // Initialize navigation
@@ -23,12 +24,27 @@ function Home() {
     const [emp_name, setName] = useState("");
     const [nic, setNic] = useState("");
     const [address, setAddress] = useState("");
-    
+    const [emp_email, setEmail] = useState("");
+
     const [sendingOtp, setSendingOtp] = useState(false); // State to track OTP sending status
 
     const [enteredOtp, setEnteredOtp] = useState(""); // To store user input
 
     const generateOtp = () => Math.floor(100000 + Math.random() * 900000);
+
+    const [searchParams] = useSearchParams();
+    const phone = searchParams.get("phone");
+    const expires = searchParams.get("expires");
+
+    useEffect(() => {
+        const currentTime = Math.floor(Date.now() / 1000); // Get current time in seconds
+
+        // Check if the URL parameters are missing or the expiration time is in the past
+        if (!phone || !expires || isNaN(expires) || currentTime > parseInt(expires, 10)) {
+            // Redirect to the invalid page or show an error message
+            navigate("/invalid"); // You can replace "/invalid" with any route you want to redirect to
+        }
+    }, [phone, expires, navigate]);
 
     const handlePhoneNumberSubmit = async (e) => {
         e.preventDefault();
@@ -48,6 +64,7 @@ function Home() {
             });
 
             if (response.ok) {
+                console.log(generatedOtp)
                 setOtpSent(true);
                 setShowOtpInput(true);
                 toast.success("OTP sent to " + phoneNumber);
@@ -64,27 +81,28 @@ function Home() {
 
     const handleOtpSubmit = async (e) => {
         e.preventDefault();
-    
+
         if (enteredOtp === String(otp)) { // Compare with stored OTP
             setOtpCorrect(true);
             setShowOtpInput(false);
             toast.success("OTP verified!");
-    
+
             // Fetch user details from backend
             try {
                 const response = await fetch(`https://demo.secretary.lk/singer_finance/customer.php?emp_mobile=${phoneNumber}`);
-                
+
                 if (!response.ok) {
                     throw new Error('Failed to fetch user details');
                 }
-    
+
                 const userDetails = await response.json();
-    console.log(userDetails)
+                console.log(userDetails)
                 // Populate form fields
                 setName(userDetails[0].emp_name || '');
+                setEmail(userDetails[0].emp_email || '');
                 setNic(userDetails[0].nic || '');
                 setAddress(userDetails[0].address || '');
-    
+
                 // toast.success("User details fetched successfully!");
             } catch (error) {
                 console.error('Error fetching user details:', error);
@@ -94,21 +112,22 @@ function Home() {
             toast.error("Incorrect OTP");
         }
     };
-    
+
 
 
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-    
+
         const requestData = {
             emp_name,
+            emp_email,
             nic,
             emp_mobile: phoneNumber,
             address,
             status: 'acknowledged'
         };
-    
+
         try {
             const response = await fetch(`https://demo.secretary.lk/singer_finance/customer.php?emp_mobile=${phoneNumber}`, {
                 method: "PUT",
@@ -117,9 +136,9 @@ function Home() {
                 },
                 body: JSON.stringify(requestData),
             });
-    
+
             const result = await response.json();
-    
+
             if (response.ok) {
                 toast.success("Update successful");
                 navigate("/success");
@@ -131,7 +150,7 @@ function Home() {
             toast.error("An unexpected error occurred. Please try again.");
         }
     };
-    
+
 
 
     // const [termsModalOpen, setTermsModalOpen] = useState(false);
@@ -165,8 +184,16 @@ function Home() {
                 hideProgressBar
                 closeButton={false}
             />
-            <div className="container mt-[6rem] max-w-full pt-3 pb-14 bg-[#f7f7f7] w-full absolute rounded-t-3xl h-full">
-                <form className="mx-8 pt-6" onSubmit={handleSubmit}>
+            <div className="ml-[4%] mt-[10rem] mb-[1rem] shadow-2xl pt-3 pb-6 bg-[#f7f7f7] w-[92%] absolute rounded-3xl h-auto">
+
+                <form className="mx-8 pt-8" onSubmit={handleSubmit}>
+                    {!otpCorrect && (
+                        <div>
+                            <h1 class="mb-3 text-xl font-bold leading-none tracking-tight text-gray-700 text-center">Acknowledge</h1>
+                            <h1 className="mb-10 text-gray-400 text-xs text-center px-6">Enter your mobile number to proceed with verification</h1>
+                        </div>
+                    )}
+
                     <div className="relative z-0 w-full mb-5 group flex flex-row gap-x-2 items-center">
                         <input
                             type="tel"
@@ -196,7 +223,7 @@ function Home() {
                     {!otpSent && !otpCorrect && (
                         <button
                             onClick={handlePhoneNumberSubmit}
-                            className="mt-8 text-white bg-red-700 hover:bg-red-800 font-medium rounded-lg text-sm px-5 py-2.5"
+                            className="mt-8 text-white w-full bg-red-700 hover:bg-red-800 font-medium rounded-lg text-sm px-5 py-2.5"
                             disabled={sendingOtp}
                         >
                             {sendingOtp ? "Sending..." : "Send OTP"}
@@ -204,7 +231,7 @@ function Home() {
                     )}
 
                     {otpSent && showOtpInput && !otpCorrect && (
-                        <div className="flex flex-row items-center mt-8 gap-x-4">
+                        <div className="flex flex-row items-center mt-8 gap-x-2 justify-between">
                             <input
                                 type="text"
                                 maxLength={6}
@@ -218,7 +245,7 @@ function Home() {
                                 onClick={handleOtpSubmit}
                                 className="text-white bg-red-700 hover:bg-red-800 font-medium rounded-lg text-sm px-5 py-2.5"
                             >
-                                Submit OTP
+                                Submit
                             </button>
                         </div>
                     )}
@@ -238,6 +265,17 @@ function Home() {
                                         className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:border-gray-300 dark:focus:border-red-500 focus:outline-none focus:ring-0 focus:border-red-600 peer"
                                     />
                                     <label htmlFor="floating_first_name" className="peer-focus:font-medium absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-red-600 peer-focus:dark:text-red-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Name</label>
+                                </div>
+                                <div className="relative z-0 w-full mb-5 group">
+                                    <input
+                                        type="text"
+                                        name="email"
+                                        value={emp_email}
+                                        onChange={(e) => setName(e.target.value)}
+                                        required
+                                        className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:border-gray-300 dark:focus:border-red-500 focus:outline-none focus:ring-0 focus:border-red-600 peer"
+                                    />
+                                    <label htmlFor="floating_first_name" className="peer-focus:font-medium absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-red-600 peer-focus:dark:text-red-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">E-mail</label>
                                 </div>
                                 <div className="relative z-0 w-full mb-5 group">
                                     <input
@@ -266,7 +304,7 @@ function Home() {
 
                                 </div>
                             </div>
-                            <div className="flex items-center mt-6">
+                            <div className="flex items-center mt-4">
                                 <input id="link-checkbox" type="checkbox" value="" className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded-md focus:ring-blue" required />
                                 <label htmlFor="link-checkbox" className="ms-2 text-sm font-medium text-gray-400">
                                     I agree with the{" "}
@@ -352,11 +390,18 @@ function Home() {
                     </div>
                 )}
 
+                {/* {otpCorrect && (
+                    <p className="pt-6 w-full text-center text-gray-400">
+                        SmartConnect product
+                    </p>
+                )} */}
+            </div>
 
+            {!otpCorrect && (
                 <p className="fixed bottom-0 w-full text-center py-2 text-gray-400">
                     SmartConnect product
                 </p>
-            </div>
+            )}
         </div>
     );
 }
