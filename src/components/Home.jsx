@@ -64,6 +64,26 @@ function Home() {
         setOtp(generatedOtp); // Save OTP in state
 
         try {
+            console.log(phoneNumber)
+            let normalizedPhone = phoneNumber;
+            if (!normalizedPhone.startsWith('0')) {
+                normalizedPhone = '0' + normalizedPhone;
+            }
+
+            // Get phone number from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            let phoneFromURL = urlParams.get('phone') || '';
+
+            if (!phoneFromURL.startsWith('0')) {
+                phoneFromURL = '0' + phoneFromURL;
+            }
+
+            // Compare entered number with URL number
+            if (normalizedPhone !== phoneFromURL) {
+                toast.error("Entered mobile number doesn't match. Please try again with your registered mobile number");
+                return; // Stop further processing
+            }
+
             const response = await fetch("https://demo.secretary.lk/sendSMSAPI/sendSMS.php", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
