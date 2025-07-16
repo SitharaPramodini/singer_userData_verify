@@ -107,15 +107,15 @@ function Home() {
                 const userDetails = await response.json();
                 console.log(userDetails);
 
-                // const emp_name = userDetails[0].emp_name || '';
+                const emp_name = userDetails[0].emp_name || '';
                 const emp_email = userDetails[0].emp_email || '';
-                // const emp_nic = userDetails[0].nic || '';
-                // const emp_address = userDetails[0].address || '';
+                const emp_nic = userDetails[0].nic || '';
+                const emp_address = userDetails[0].address || '';
 
-                // setName(emp_name);
+                setName(emp_name);
                 setEmail(emp_email);
-                // setNic(emp_nic);
-                // setAddress(emp_address);
+                setNic(emp_nic);
+                setAddress(emp_address);
 
                 const generatedMailOtp = generateOtp();
                 setMailOtp(generatedMailOtp);
