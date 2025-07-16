@@ -248,6 +248,42 @@ function Home() {
             if (response.ok) {
                 toast.success("Update successful");
                 navigate("/success");
+
+                const response = await fetch("https://demo.secretary.lk/sendSMSAPI/sendSMS.php", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        mobile: phoneNumber,
+                        message: `Thank you for choosing Singer Finance. \nYour details have been successfully received and are being processed. \n– Singer Finance`,
+                    }),
+                });
+
+                if (response.ok) {
+                    console.log("success messsage sent" + phoneNumber);
+                } else {
+                    console.log("Failed to send messsage");
+                }
+
+                emailjs
+                    .send(
+                        import.meta.env.VITE_EMAILJS_SERVICE_ID,
+                        import.meta.env.VITE_EMAILJS_SUCCESS_TEMPLATE_ID,
+                        {
+                            email: emp_email,
+                        },
+                        {
+                            publicKey: import.meta.env.VITE_EMAILJS_PUBLIC_KEY,
+                        }
+                    )
+                    .then(
+                        () => {
+                            console.log('Email sent successfully!');
+                            setOtpMailSent(true);
+                        },
+                        (error) => {
+                            console.error('Email sending failed:', error.text);
+                        }
+                    );
             } else {
                 toast.error(result.message || "Update failed.");
             }
