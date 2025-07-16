@@ -178,6 +178,8 @@ function Home() {
     };
 
     const handleMailOtpSubmit = async (e) => {
+        e.preventDefault();
+
         if (enteredMailOtp === String(otpMail)) {
             setOtpMailCorrect(true);
             setShowOtpInput(false);
@@ -214,6 +216,7 @@ function Home() {
             }
         } else {
             toast.error("Incorrect OTP");
+            return
         }
     }
 
@@ -289,7 +292,7 @@ function Home() {
             />
             <div className="ml-[4%] mt-[10rem] mb-[1rem] shadow-2xl pt-3 pb-6 bg-[#f7f7f7] w-[92%] absolute rounded-3xl h-auto">
 
-                <form className="mx-8 pt-8" onSubmit={handleSubmit}>
+                <form className="mx-8 pt-8" >
                     {!otpCorrect && (
                         <div>
                             <h1 class="mb-3 text-xl font-bold leading-none tracking-tight text-gray-700 text-center">Acknowledge</h1>
@@ -451,7 +454,7 @@ function Home() {
                                 </label>
                             </div>
 
-                            <button type="submit" className="mt-8 text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-800">Submit</button>
+                            <button type="submit" onClick={handleSubmit} className="mt-8 text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-800">Submit</button>
                         </div>
                     )}
 
