@@ -9,6 +9,8 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useNavigate } from "react-router-dom";
 import { useSearchParams } from "react-router-dom";
+import emailjs from '@emailjs/browser';
+
 
 function Home() {
     const navigate = useNavigate(); // Initialize navigation
@@ -17,8 +19,15 @@ function Home() {
     // const [showCamera, setShowCamera] = useState(false);
     const [showOtpInput, setShowOtpInput] = useState(false);
     const [otp, setOtp] = useState("");
+
     const [otpSent, setOtpSent] = useState(false);
     const [otpCorrect, setOtpCorrect] = useState(false);
+
+    const [otpMailSent, setOtpMailSent] = useState(false);
+    const [otpMailCorrect, setOtpMailCorrect] = useState(false);
+    const [otpMail, setMailOtp] = useState("");
+
+
     const [phoneNumber, setPhoneNumber] = useState("");
     // const [otpMessage, setOtpMessage] = useState("");
     const [emp_name, setName] = useState("");
@@ -29,6 +38,7 @@ function Home() {
     const [sendingOtp, setSendingOtp] = useState(false); // State to track OTP sending status
 
     const [enteredOtp, setEnteredOtp] = useState(""); // To store user input
+    const [enteredMailOtp, setEnteredMailOtp] = useState(""); // To store user input
 
     const generateOtp = () => Math.floor(100000 + Math.random() * 900000);
 
@@ -42,7 +52,7 @@ function Home() {
         // Check if the URL parameters are missing or the expiration time is in the past
         if (!phone || !expires || isNaN(expires) || currentTime > parseInt(expires, 10)) {
             // Redirect to the invalid page or show an error message
-            navigate("/invalid"); // You can replace "/invalid" with any route you want to redirect to
+            // navigate("/invalid"); // You can replace "/invalid" with any route you want to redirect to
         }
     }, [phone, expires, navigate]);
 
@@ -82,12 +92,11 @@ function Home() {
     const handleOtpSubmit = async (e) => {
         e.preventDefault();
 
-        if (enteredOtp === String(otp)) { // Compare with stored OTP
+        if (enteredOtp === String(otp)) {
             setOtpCorrect(true);
             setShowOtpInput(false);
             toast.success("OTP verified!");
 
-            // Fetch user details from backend
             try {
                 const response = await fetch(`https://demo.secretary.lk/singer_finance/customer.php?emp_mobile=${phoneNumber}`);
 
@@ -96,14 +105,45 @@ function Home() {
                 }
 
                 const userDetails = await response.json();
-                console.log(userDetails)
-                // Populate form fields
-                setName(userDetails[0].emp_name || '');
-                setEmail(userDetails[0].emp_email || '');
-                setNic(userDetails[0].nic || '');
-                setAddress(userDetails[0].address || '');
+                console.log(userDetails);
 
-                // toast.success("User details fetched successfully!");
+                // const emp_name = userDetails[0].emp_name || '';
+                const emp_email = userDetails[0].emp_email || '';
+                // const emp_nic = userDetails[0].nic || '';
+                // const emp_address = userDetails[0].address || '';
+
+                // setName(emp_name);
+                setEmail(emp_email);
+                // setNic(emp_nic);
+                // setAddress(emp_address);
+
+                const generatedMailOtp = generateOtp();
+                setMailOtp(generatedMailOtp);
+
+                // ✅ Send email using `send()` with manual params
+                console.log("email: ", userDetails[0].emp_email)
+                emailjs
+                    .send(
+                        import.meta.env.VITE_EMAILJS_SERVICE_ID,
+                        import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
+                        {
+                            email: userDetails[0].emp_email,
+                            passcode: generatedMailOtp,
+                        },
+                        {
+                            publicKey: import.meta.env.VITE_EMAILJS_PUBLIC_KEY,
+                        }
+                    )
+                    .then(
+                        () => {
+                            console.log('Email sent successfully!');
+                            setOtpMailSent(true);
+                        },
+                        (error) => {
+                            console.error('Email sending failed:', error.text);
+                        }
+                    );
+
             } catch (error) {
                 console.error('Error fetching user details:', error);
                 toast.error("Failed to fetch user details.");
@@ -113,6 +153,41 @@ function Home() {
         }
     };
 
+    const handleMailOtpSubmit = async (e) => {
+        if (enteredMailOtp === String(otpMail)) {
+            setOtpMailCorrect(true);
+            setShowOtpInput(false);
+            toast.success("OTP verified!");
+
+            try {
+                const response = await fetch(`https://demo.secretary.lk/singer_finance/customer.php?emp_mobile=${phoneNumber}`);
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch user details');
+                }
+
+                const userDetails = await response.json();
+                console.log(userDetails);
+
+                const emp_name = userDetails[0].emp_name || '';
+                const emp_email = userDetails[0].emp_email || '';
+                const emp_nic = userDetails[0].nic || '';
+                const emp_address = userDetails[0].address || '';
+
+                setName(emp_name);
+                setEmail(emp_email);
+                setNic(emp_nic);
+                setAddress(emp_address);
+
+
+            } catch (error) {
+                console.error('Error fetching user details:', error);
+                toast.error("Failed to fetch user details.");
+            }
+        } else {
+            toast.error("Incorrect OTP");
+        }
+    }
 
 
 
@@ -250,11 +325,56 @@ function Home() {
                         </div>
                     )}
 
-                    {otpCorrect && (
+                    {otpCorrect && !otpMailCorrect && (
+                        <div>
+                            <div>
+                                <h1 class="mb-3 text-xl font-bold leading-none tracking-tight text-gray-700 text-center">Verify your email</h1>
+                                <h1 className=" text-gray-400 text-xs text-center px-6">The verification code has been sent to your email</h1>
+                                <p className="mb-10 text-gray-400 text-xs text-center px-6">{emp_email}</p>
+                            </div>
+                            <div className="flex flex-row items-center mt-8 gap-x-2 justify-between">
+
+                                <input
+                                    type="text"
+                                    maxLength={6}
+                                    value={enteredMailOtp}
+                                    onChange={(e) => setEnteredMailOtp(e.target.value)}
+                                    className="border w-2/3 p-2 rounded border-gray-300 focus:ring-red-600 focus:ring-0"
+                                    placeholder="Enter OTP"
+                                    required
+                                />
+                                <button
+                                    onClick={handleMailOtpSubmit}
+                                    className="text-white w-1/3 bg-red-700 hover:bg-red-800 font-medium rounded-lg text-sm px-5 py-2.5"
+                                >
+                                    Submit
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {otpMailCorrect && (
 
                         <div className="mt-1">
 
                             <div className="grid md:grid-cols-2 md:gap-6">
+                                <div className="relative flex gap-x-2 z-0 w-full mb-5 group">
+                                    <input
+                                        type="email"
+                                        name="email"
+                                        value={emp_email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        required
+                                        readOnly
+                                        className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:border-gray-300 dark:focus:border-red-500 focus:outline-none focus:ring-0 focus:border-red-600 peer"
+                                    />
+                                    <label htmlFor="floating_first_name" className="peer-focus:font-medium absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-red-600 peer-focus:dark:text-red-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">E-mail</label>
+                                    {otpMailCorrect && (
+                                        <div className="flex items-center justify-center mt-4 z-50 right-2 ">
+                                            <span className="text-green-500 text-2xl mb-2"><RiVerifiedBadgeFill /></span>
+                                        </div>
+                                    )}
+                                </div>
                                 <div className="relative z-0 w-full mb-5 group">
                                     <input
                                         type="text"
@@ -265,17 +385,6 @@ function Home() {
                                         className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:border-gray-300 dark:focus:border-red-500 focus:outline-none focus:ring-0 focus:border-red-600 peer"
                                     />
                                     <label htmlFor="floating_first_name" className="peer-focus:font-medium absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-red-600 peer-focus:dark:text-red-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Name</label>
-                                </div>
-                                <div className="relative z-0 w-full mb-5 group">
-                                    <input
-                                        type="email"
-                                        name="email"
-                                        value={emp_email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                        required
-                                        className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:border-gray-300 dark:focus:border-red-500 focus:outline-none focus:ring-0 focus:border-red-600 peer"
-                                    />
-                                    <label htmlFor="floating_first_name" className="peer-focus:font-medium absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-red-600 peer-focus:dark:text-red-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">E-mail</label>
                                 </div>
                                 <div className="relative z-0 w-full mb-5 group">
                                     <input
