@@ -27,6 +27,7 @@
     "react-datepicker": "^7.5.0",
     "react-dom": "^18.2.0",
     "react-leaflet": "^4.2.1",
+    "react-qr-barcode-scanner": "^2.1.8",
     "react-router-dom": "^6.28.0",
     "react-toastify": "^11.0.3",
     "react-webcam": "^7.2.0",

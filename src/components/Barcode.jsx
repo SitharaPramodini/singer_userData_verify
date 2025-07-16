@@ -1,44 +1,27 @@
-import { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import BarcodeScannerComponent from 'react-qr-barcode-scanner';
 
-function Barcode() {
-  const [barcode, setBarcode] = useState('No barcode scanned');
-  const [buffer, setBuffer] = useState('');
-
-  useEffect(() => {
-    let scanBuffer = '';
-    let lastKeyTime = Date.now();
-
-    const handleKeyDown = (e) => {
-      const currentTime = Date.now();
-
-      // Reset if delay between keys is too long (>100ms)
-      if (currentTime - lastKeyTime > 100) {
-        scanBuffer = '';
-      }
-
-      if (e.key === 'Enter') {
-        if (scanBuffer.length >= 3) {
-          console.log('Barcode scanned:', scanBuffer);
-          setBarcode(scanBuffer);
-        }
-        scanBuffer = '';
-      } else {
-        scanBuffer += e.key;
-      }
-
-      lastKeyTime = currentTime;
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+export default function BarcodeScanner() {
+  const [data, setData] = useState('No result');
 
   return (
-    <div style={{ padding: '5rem 10rem', textAlign: 'center' }}>
-      <h2>Scan a Barcode</h2>
-      <p style={{ fontSize: '1.5rem', color: '#333' }}>{barcode}</p>
+    <div style={{ padding: '2rem', textAlign: 'center' }}>
+      <h2>Scan Barcode or QR Code</h2>
+      <div style={{ maxWidth: 500, margin: '1rem auto' }}>
+        <BarcodeScannerComponent
+          width={500}
+          height={400}
+          onUpdate={(err, result) => {
+            if (result) {
+              setData(result.text);
+            } else if (err) {
+              console.error(err);
+            }
+          }}
+        />
+      </div>
+      <h3>Scanned Result:</h3>
+      <p>{data}</p>
     </div>
   );
 }
-
-export default Barcode;
