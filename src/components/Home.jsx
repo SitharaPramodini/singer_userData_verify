@@ -164,7 +164,11 @@ function Home() {
             toast.success("OTP verified!");
 
             try {
-                const response = await fetch(`https://demo.secretary.lk/singer_finance/customer.php?emp_mobile=${phoneNumber}`);
+                let normalizedPhone = phoneNumber;
+                if (!normalizedPhone.startsWith('0')) {
+                    normalizedPhone = '0' + normalizedPhone;
+                }
+                const response = await fetch(`https://demo.secretary.lk/singer_finance/customer.php?emp_mobile=${normalizedPhone}`);
 
                 if (!response.ok) {
                     throw new Error('Failed to fetch user details');
