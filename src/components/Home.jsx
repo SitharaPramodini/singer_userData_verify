@@ -98,8 +98,12 @@ function Home() {
             toast.success("OTP verified!");
 
             try {
-                const response = await fetch(`https://demo.secretary.lk/singer_finance/customer.php?emp_mobile=${phoneNumber}`);
+                let normalizedPhone = phoneNumber;
+                if (!normalizedPhone.startsWith('0')) {
+                    normalizedPhone = '0' + normalizedPhone;
+                }
 
+                const response = await fetch(`https://demo.secretary.lk/singer_finance/customer.php?emp_mobile=${normalizedPhone}`);
                 if (!response.ok) {
                     throw new Error('Failed to fetch user details');
                 }
@@ -107,15 +111,15 @@ function Home() {
                 const userDetails = await response.json();
                 console.log(userDetails);
 
-                const emp_name = userDetails[0].emp_name || '';
+                // const emp_name = userDetails[0].emp_name || '';
                 const emp_email = userDetails[0].emp_email || '';
-                const emp_nic = userDetails[0].nic || '';
-                const emp_address = userDetails[0].address || '';
+                // const emp_nic = userDetails[0].nic || '';
+                // const emp_address = userDetails[0].address || '';
 
-                setName(emp_name);
+                // setName(emp_name);
                 setEmail(emp_email);
-                setNic(emp_nic);
-                setAddress(emp_address);
+                // setNic(emp_nic);
+                // setAddress(emp_address);
 
                 const generatedMailOtp = generateOtp();
                 setMailOtp(generatedMailOtp);
